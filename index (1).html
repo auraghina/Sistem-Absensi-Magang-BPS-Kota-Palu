@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SIMAGANG BPS — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #0A1628;
+      --navy-mid: #112240;
+      --blue: #1A56E8;
+      --blue-light: #3B82F6;
+      --gold: #F0A500;
+      --gold-light: #FBBF24;
+      --white: #F8FAFF;
+      --gray: #94A3B8;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--navy);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(26,86,232,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(26,86,232,0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      animation: float 8s ease-in-out infinite;
+    }
+    .bg-orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(26,86,232,0.15), transparent 70%);
+      top: -150px; right: -100px;
+      animation-delay: 0s;
+    }
+    .bg-orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(240,165,0,0.1), transparent 70%);
+      bottom: -100px; left: -100px;
+      animation-delay: 4s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-20px) scale(1.05); }
+    }
+
+    /* Layout */
+    .page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Left Panel */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px;
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 60px;
+      animation: slideUp 0.6s ease both;
+    }
+
+    .logo-badge {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      color: white;
+      box-shadow: 0 8px 24px rgba(26,86,232,0.4);
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+    }
+    .logo-text .main { font-size: 22px; font-weight: 800; color: var(--white); }
+    .logo-text .sub { font-size: 11px; font-weight: 400; color: var(--gray); letter-spacing: 0.1em; text-transform: uppercase; }
+
+    .hero-heading {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(32px, 3vw, 48px);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      animation: slideUp 0.6s 0.1s ease both;
+    }
+
+    .hero-heading .accent {
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-desc {
+      color: var(--gray);
+      font-size: 15px;
+      line-height: 1.7;
+      max-width: 380px;
+      margin-bottom: 48px;
+      animation: slideUp 0.6s 0.2s ease both;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 32px;
+      animation: slideUp 0.6s 0.3s ease both;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--blue-light);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .divider-line {
+      width: 40px; height: 3px;
+      background: linear-gradient(90deg, var(--blue), var(--gold));
+      border-radius: 2px;
+      margin-bottom: 48px;
+      animation: slideUp 0.6s 0.15s ease both;
+    }
+
+    .bps-badge {
+      position: absolute;
+      bottom: 40px;
+      left: 60px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--gray);
+    }
+    .bps-badge span { color: var(--gold); font-weight: 600; }
+
+    /* Right Panel – Form */
+    .right-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      animation: slideUp 0.6s 0.2s ease both;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .card-sub {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 36px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input::placeholder { color: rgba(148,163,184,0.4); }
+    .form-input:focus {
+      border-color: var(--blue-light);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      box-shadow: 0 8px 24px rgba(26,86,232,0.35);
+      margin-top: 8px;
+      letter-spacing: 0.03em;
+    }
+    .btn-login:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 32px rgba(26,86,232,0.45);
+    }
+    .btn-login:active { transform: translateY(0); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .error-msg {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #FC8181;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+
+    .separator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 28px 0;
+      color: var(--gray);
+      font-size: 12px;
+    }
+    .separator::before, .separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .info-box {
+      background: rgba(26,86,232,0.08);
+      border: 1px solid rgba(26,86,232,0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #93C5FD;
+      line-height: 1.6;
+    }
+    .info-box strong { color: var(--blue-light); }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .page { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { padding: 40px 24px; }
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="page">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="logo-area">
+        <div class="logo-badge">BPS</div>
+        <div class="logo-text">
+          <div class="main">SIMAGANG</div>
+          <div class="sub">BPS Kota Palu</div>
+        </div>
+      </div>
+
+      <h1 class="hero-heading">
+        Sistem Informasi<br>
+        Absensi <span class="accent">Magang</span><br>
+        Digital
+      </h1>
+
+      <div class="divider-line"></div>
+
+      <p class="hero-desc">
+        Platform pencatatan kehadiran peserta magang BPS Kota Palu yang terintegrasi, akurat, dan mudah digunakan.
+      </p>
+
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-num">Real‑time</span>
+          <span class="stat-label">Pencatatan</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">Auto</span>
+          <span class="stat-label">Rekap Laporan</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">Excel</span>
+          <span class="stat-label">Export Data</span>
+        </div>
+      </div>
+
+      <div class="bps-badge">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span>Badan Pusat Statistik</span> · <span>Kota Palu, Sulteng</span>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="login-card">
+        <h2 class="card-title">Selamat Datang 👋</h2>
+        <p class="card-sub">Masuk ke akun Anda untuk melanjutkan</p>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="emailInput" placeholder="contoh@email.com" autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="passInput" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+
+        <button class="btn-login" id="loginBtn" onclick="handleLogin()">
+          Masuk
+        </button>
+
+        <div class="separator">atau info akun</div>
+
+        <div class="info-box">
+          <strong>Admin:</strong> Hubungi pengelola sistem untuk akun admin.<br>
+          <strong>Magang:</strong> Akun disiapkan oleh admin BPS setelah registrasi.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Redirect kalau sudah login
+    (async () => {
+      await redirectIfLoggedIn('pages/admin.html', 'pages/magang.html');
+    })();
+
+    // Handle Enter key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    async function handleLogin() {
+      const email = document.getElementById('emailInput').value.trim();
+      const pass = document.getElementById('passInput').value;
+      const btn = document.getElementById('loginBtn');
+      const errEl = document.getElementById('errorMsg');
+
+      errEl.classList.remove('show');
+
+      if (!email || !pass) {
+        showError('Email dan password wajib diisi.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span>Memproses...';
+
+      const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
+
+      if (error) {
+        showError('Email atau password salah. Coba lagi.');
+        btn.disabled = false;
+        btn.innerHTML = 'Masuk';
+        return;
+      }
+
+      // Ambil profile untuk cek role
+      const profile = await getUserProfile(data.user.id);
+      if (profile?.role === 'admin') {
+        window.location.href = 'pages/admin.html';
+      } else {
+        window.location.href = 'pages/magang.html';
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+  </script>
+</body>
+</html>
